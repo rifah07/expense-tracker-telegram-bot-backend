@@ -1,5 +1,5 @@
 {
-  "name": "expense-tracker-backend",
+  "name": "telegram-bot-expense-tracker-backend",
   "version": "1.0.0",
   "private": true,
   "scripts": {
