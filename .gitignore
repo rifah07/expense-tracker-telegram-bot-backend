@@ -51,3 +51,6 @@ uploads/
 # Misc
 .cache/
 .parcel-cache/
+
+.vercel/
+coverage/
