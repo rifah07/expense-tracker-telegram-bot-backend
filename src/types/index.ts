@@ -53,3 +53,18 @@ export interface JwtPayload {
 export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
+
+// ─── Report types ────────────────────────────────────────────────────────────────
+export interface CategorySummary {
+  category: ExpenseCategory;
+  total: number;
+  count: number;
+}
+
+export interface ExpenseSummary {
+  totalAmount: number;
+  count: number;
+  byCategory: CategorySummary[];
+  startDate: string;
+  endDate: string;
+}
