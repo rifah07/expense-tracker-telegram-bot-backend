@@ -1,3 +1,6 @@
+import { Request } from "express";
+
+// ─── Expense ─────────────────────────────────────────────────────────────────────
 export type ExpenseCategory =
   | "Food"
   | "Transport"
@@ -38,4 +41,15 @@ export function successResponse<T>(data: T, message?: string): ApiResponse<T> {
 
 export function errorResponse(error: string, message?: string): ApiResponse {
   return { success: false, error, message };
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────────
+export interface JwtPayload {
+  userId: string;
+  telegramId: string;
+}
+
+// Extends Express Request to include the authenticated user
+export interface AuthRequest extends Request {
+  user?: JwtPayload;
 }
