@@ -8,7 +8,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection URL"),
   TELEGRAM_BOT_TOKEN: z.string().min(1, "TELEGRAM_BOT_TOKEN is required"),
   WEBHOOK_URL: z.string().url("WEBHOOK_URL must be a valid URL").optional(),
-  OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
+  GEMENI_API_KEY: z.string().min(1, "GEMENI_API_KEY is required"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
@@ -29,7 +29,7 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("\n❌ Environment variable validation failed:\n");
+  console.error("\nEnvironment variable validation failed:\n");
   parsed.error.issues.forEach((issue) => {
     console.error(`  [${issue.path.join(".")}] → ${issue.message}`);
   });
