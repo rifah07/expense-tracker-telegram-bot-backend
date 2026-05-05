@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────────
+// Created automatically when a user first messages the bot
+model User {
+  id         String    @id @default(cuid())
+  telegramId String    @unique // Telegram's numeric user ID stored as string
+  name       String    // First name from Telegram
+  username   String?   // Telegram @username (optional)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  expenses   Expense[]
+  budget     Budget?
+
+  @@map("users")
+}
+
+// ─── Expense ─────────────────────────────────────────────────────────────────────
+// Created each time user sends a message like "250 lunch"
+model Expense {
+  id        String   @id @default(cuid())
+  amount    Float    // e.g. 250.00
+  category  String   // Food | Transport | Shopping | Bills | Health | Entertainment | Others
+  note      String   // e.g. "lunch at office"
+  date      DateTime // actual expense date (can differ from createdAt)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes for fast date-range queries (today/week/month reports)
+  @@index([userId, date])
+  @@index([userId, category])
+  @@map("expenses")
+}
+
+// ─── Budget ──────────────────────────────────────────────────────────────────────
+// One budget per user — monthly spending limit + alert threshold
+model Budget {
+  id           String   @id @default(cuid())
+  monthlyLimit Float    // e.g. 10000 (BDT or any currency)
+  alertPercent Int      @default(80) // Alert when spending hits 80% of limit
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relation — one-to-one with User
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}

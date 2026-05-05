@@ -13,6 +13,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "typecheck": "tsc --noEmit"
   },
+   "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.10.2",
