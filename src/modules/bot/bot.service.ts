@@ -281,7 +281,7 @@ ${emoji[expense.category] ?? "📦"} <b>${expense.category}</b>
 });
 
 // ── Bot setup ─────────────────────────────────────────────────────────────────
-export async function setupBot(): Promise<void> {
+/* export async function setupBot(): Promise<void> {
   if (env.NODE_ENV === "production" && env.WEBHOOK_URL) {
     const webhookUrl = `${env.WEBHOOK_URL}/api/bot/webhook`;
     await bot.telegram.setWebhook(webhookUrl);
@@ -291,6 +291,17 @@ export async function setupBot(): Promise<void> {
     bot.launch();
     log.info("Bot polling started (development)");
   }
+} */
+
+export async function setupBot(): Promise<void> {
+  if (env.NODE_ENV === "production") {
+    log.info("Production mode - using webhook (not pulling)");
+    return;
+  }
+  // Local development - use polling (no webhook)
+  await bot.telegram.deleteWebhook();
+  bot.launch();
+  log.info("Bot polling started (development)");
 }
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
