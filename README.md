@@ -10,9 +10,9 @@
 | Resource | URL |
 |---|---|
 | 🤖 Telegram Bot | [@ExpenseTrack_R_Bot](https://t.me/ExpenseTrack_R_Bot) |
-| 🖥️ Backend API | [(https://expense-tracker-telegram-bot-backen-eight.vercel.app/)](https://expense-tracker-telegram-bot-backen-eight.vercel.app/) |
-| 🎨 Frontend Dashboard | [expense-tracker-frontend.vercel.app](https://expense-tracker-frontend.vercel.app) |
-| 📦 Frontend Repo | [github.com/yourname/expense-tracker-frontend](https://github.com/yourname/expense-tracker-frontend) |
+| 🖥️ Backend API | [expense-tracker-backend.vercel.app](https://expense-tracker-telegram-bot-backen-eight.vercel.app/) |
+| 🎨 Frontend Dashboard | [expense-tracker-frontend.vercel.app](https://expense-tracker-telegram-bot-fronte.vercel.app/login) |
+| 📦 Frontend Repo | [github.com/yourname/expense-tracker-frontend](https://github.com/rifah07/expense-tracker-telegram-bot-frontend) |
 
 ---
 
