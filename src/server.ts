@@ -1,10 +1,12 @@
 import { createApp } from "./app";
 import { env } from "./config/env";
 import { connectDatabase, disconnectDatabase } from "./config/database";
+import { setupBot } from './modules/bot/bot.service';
 import { logger } from "./config/logger";
 
 async function bootstrap(): Promise<void> {
   await connectDatabase();
+  await setupBot();
 
   const app = createApp();
 

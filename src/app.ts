@@ -5,13 +5,10 @@ import rateLimit from "express-rate-limit";
 import { env } from "./config/env";
 import { requestLogger } from "./middlewares/requestLogger";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
-
-// ─── Route imports (planned to add as after build each module) ───────────────────────────────
-// import { expenseRouter }   from './modules/expense/expense.routes';
-// import { budgetRouter }    from './modules/budget/budget.routes';
-// import { userRouter }      from './modules/user/user.routes';
-// import { botRouter }       from './modules/bot/bot.routes';
-// import { reportRouter }    from './modules/expense/report.routes';
+import { expenseRouter } from "./modules/expense/expense.routes";
+import { budgetRouter } from "./modules/budget/budget.routes";
+import { userRouter } from "./modules/user/user.routes";
+import { botRouter } from "./modules/bot/bot.routes";
 
 export function createApp(): Application {
   const app = express();
@@ -64,7 +61,6 @@ export function createApp(): Application {
   app.use(globalLimiter);
   app.use(requestLogger);
 
-  // ── Health check (Vercel needs this to verify the function is alive) ──────────
   app.get("/health", (_req, res) => {
     res.json({
       status: "ok",
@@ -73,14 +69,11 @@ export function createApp(): Application {
     });
   });
 
-  // ── API routes (uncomment as each step is built) ─────────────────────────────
-  // app.use('/api/auth',     authLimiter, userRouter);
-  // app.use('/api/expenses', expenseRouter);
-  // app.use('/api/budgets',  budgetRouter);
-  // app.use('/api/reports',  reportRouter);
-  // app.use('/api/bot',      botRouter);           // Telegram webhook
+  app.use("/api/auth", authLimiter, userRouter);
+  app.use("/api/expenses", expenseRouter);
+  app.use("/api/budgets", budgetRouter);
+  app.use("/api/bot", botRouter); // Telegram webhook
 
-  // ── 404 + global error handler (must be last) ────────────────────────────────
   app.use(notFoundHandler);
   app.use(errorHandler);
 
