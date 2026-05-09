@@ -8,7 +8,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection URL"),
   TELEGRAM_BOT_TOKEN: z.string().min(1, "TELEGRAM_BOT_TOKEN is required"),
   WEBHOOK_URL: z.string().url("WEBHOOK_URL must be a valid URL").optional(),
-  GEMENI_API_KEY: z.string().min(1, "GEMENI_API_KEY is required"),
+  GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
