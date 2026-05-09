@@ -30,11 +30,12 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error("\nEnvironment variable validation failed:\n");
+
   parsed.error.issues.forEach((issue) => {
     console.error(`  [${issue.path.join(".")}] → ${issue.message}`);
   });
-  console.error("\n  → Copy .env.example to .env and fill in the values.\n");
-  process.exit(1);
+
+  throw new Error("Invalid environment variables");
 }
 
 export const env = parsed.data;
