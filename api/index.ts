@@ -9,5 +9,6 @@
 import { createApp } from "../src/app";
 
 const app = createApp();
+console.log("API STARTED");
 
 export default app;
