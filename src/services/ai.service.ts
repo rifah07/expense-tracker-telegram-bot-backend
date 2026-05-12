@@ -7,7 +7,7 @@ const log = createLogger("AIService");
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 //const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash",
+  model: "gemini-1.5-flash-latest",
   generationConfig: {
     responseMimeType: "application/json",
     temperature: 0.2,
