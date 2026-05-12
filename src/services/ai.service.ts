@@ -7,7 +7,7 @@ const log = createLogger("AIService");
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 //const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const model = genAI.getGenerativeModel({
-  model: "Gemini 3.1 Flash Lite",
+  model: "gemini-3.1-flash-lite",
   generationConfig: {
     responseMimeType: "application/json",
     temperature: 0.2,
@@ -285,13 +285,12 @@ function extractAmount(text: string): number | null {
 
 // ── Extract note (text without the number) ───────────────────────────────────
 function extractNote(text: string, amount: number): string {
-  return (
-    text
-      .replace(amount.toString(), "")
-      .replace(/yesterday|today|\d+\s*days?\s*ago/gi, "")
-      .trim()
-      .replace(/\s+/g, " ") || text.trim()
-  );
+  const cleaned = text
+    .replace(amount.toString(), "")
+    .replace(/yesterday|today|\d+\s*days?\s*ago/gi, "")
+    .trim();
+
+  return cleaned || "Expense"; // Fallback to "Expense" instead of original text if empty
 }
 
 /* // ── Main parse function ───────────────────────────────────────────────────────
