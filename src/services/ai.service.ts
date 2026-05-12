@@ -5,7 +5,14 @@ import { createLogger } from "../config/logger";
 
 const log = createLogger("AIService");
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+//const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+  generationConfig: {
+    responseMimeType: "application/json",
+    temperature: 0.2,
+  },
+});
 
 const KEYWORD_MAP: Record<ExpenseCategory, string[]> = {
   Food: [
@@ -287,39 +294,39 @@ function extractNote(text: string, amount: number): string {
   );
 }
 
-// ── Main parse function ───────────────────────────────────────────────────────
+/* // ── Main parse function ───────────────────────────────────────────────────────
 export async function parseExpenseWithAI(text: string): Promise<ParsedExpense> {
-  const keywordCategory = categorizeByKeyword(text);
-  const amount = extractAmount(text);
+ const keywordCategory = categorizeByKeyword(text);
+ const amount = extractAmount(text);
 
-  // ── Strategy 1: keyword + amount found locally (no API call) ─────────────
-  if (keywordCategory && amount && amount > 0) {
-    const note = extractNote(text, amount);
-    log.debug("Parsed locally", {
-      text,
-      amount,
-      category: keywordCategory,
-      note,
-    });
-    return {
-      amount,
-      category: keywordCategory,
-      note,
-      date: parseRelativeDate(text).toISOString(),
-    };
-  }
+ // ── Strategy 1: keyword + amount found locally (no API call) ─────────────
+ if (keywordCategory && amount && amount > 0) {
+   const note = extractNote(text, amount);
+   log.debug("Parsed locally", {
+     text,
+     amount,
+     category: keywordCategory,
+     note,
+   });
+   return {
+     amount,
+     category: keywordCategory,
+     note,
+     date: parseRelativeDate(text).toISOString(),
+   };
+ }
 
-  // ── Strategy 2: amount found but no keyword → use Shopping as default ─────
-  // Then try Gemini, but at least have a fallback
-  if (amount && amount > 0 && !keywordCategory) {
-    log.debug("Amount found, no keyword — trying Gemini", { text });
-  }
+ // ── Strategy 2: amount found but no keyword → use Shopping as default ─────
+ // Then try Gemini, but at least have a fallback
+ if (amount && amount > 0 && !keywordCategory) {
+   log.debug("Amount found, no keyword — trying Gemini", { text });
+ }
 
-  // ── Strategy 3: Gemini AI for everything else ─────────────────────────────
-  log.debug("Calling Gemini", { text });
+ // ── Strategy 3: Gemini AI for everything else ─────────────────────────────
+ log.debug("Calling Gemini", { text });
 
-  try {
-    const prompt = `
+ try {
+   const prompt = `
 You are an expense parser for a Bangladeshi expense tracker app.
 Parse the user's message and extract expense details.
 
@@ -347,43 +354,189 @@ Respond ONLY with a single line of valid JSON. No markdown, no explanation.
 Example: {"amount":20,"category":"Shopping","note":"pencil","date":"2024-05-09"}
 `;
 
+   const result = await model.generateContent(prompt);
+   const raw = result.response.text().trim();
+   log.debug("Gemini raw response", { raw });
+
+   // Strip markdown fences if present
+   const cleaned = raw.replace(/```json|```/g, "").trim();
+
+   const parsed = JSON.parse(cleaned) as ParsedExpense;
+
+   if (!parsed.amount || parsed.amount <= 0) {
+     throw new Error("No valid amount in AI response");
+   }
+   if (!EXPENSE_CATEGORIES.includes(parsed.category as ExpenseCategory)) {
+     parsed.category = "Others";
+   }
+   if (!parsed.date || isNaN(Date.parse(parsed.date))) {
+     parsed.date = new Date().toISOString();
+   }
+
+   log.debug("Gemini parsed successfully", parsed);
+   return parsed;
+ } catch (err) {
+   log.error("Gemini failed", { err, text });
+
+   // ── Final fallback: if we at least have an amount, save as Others ────────
+   if (amount && amount > 0) {
+     log.debug("Using final fallback with amount found", { amount, text });
+     return {
+       amount,
+       category: "Others",
+       note: text.replace(amount.toString(), "").trim() || text,
+       date: parseRelativeDate(text).toISOString(),
+     };
+   }
+
+   throw new Error(
+     'Could not understand the expense. Please try:\n"250 lunch"\n"80 rickshaw"\n"500 grocery"',
+   );
+ }
+}
+ */
+export async function parseExpenseWithAI(text: string): Promise<ParsedExpense> {
+  const keywordCategory = categorizeByKeyword(text);
+  const amount = extractAmount(text);
+
+  // ── Strategy 1: keyword + amount found locally ────────────────────────────
+  if (keywordCategory && amount && amount > 0) {
+    const note = extractNote(text, amount);
+
+    log.debug("Parsed locally without Gemini", {
+      text,
+      amount,
+      category: keywordCategory,
+      note,
+    });
+
+    return {
+      amount,
+      category: keywordCategory,
+      note,
+      date: parseRelativeDate(text).toISOString(),
+    };
+  }
+
+  // ── Strategy 2: Use Gemini ────────────────────────────────────────────────
+  log.debug("Calling Gemini AI", {
+    text,
+    keywordCategory,
+    amount,
+  });
+
+  try {
+    const prompt = `
+You are an expense parser for a Bangladeshi expense tracker app.
+
+Parse the user's message and extract expense details.
+
+User message: "${text}"
+
+Today's date: ${new Date().toISOString().split("T")[0]}
+
+Available categories:
+${EXPENSE_CATEGORIES.join(", ")}
+
+Category rules:
+- Food: anything edible, fruits, drinks, restaurants
+- Transport: rickshaw, cng, uber, bus, fuel
+- Shopping: clothes, stationery, household items
+- Bills: electricity, rent, internet, recharge
+- Health: medicine, doctor, hospital
+- Entertainment: movies, games, sports
+- Others: only if nothing else fits
+
+Rules:
+- amount must be positive number
+- category must be one from available categories
+- note should be short
+- date should be YYYY-MM-DD
+
+Return ONLY valid JSON.
+
+Example:
+{
+  "amount": 250,
+  "category": "Food",
+  "note": "mango",
+  "date": "2026-05-12"
+}
+`;
+
     const result = await model.generateContent(prompt);
+
     const raw = result.response.text().trim();
-    log.debug("Gemini raw response", { raw });
 
-    // Strip markdown fences if present
-    const cleaned = raw.replace(/```json|```/g, "").trim();
+    log.debug("Gemini raw response", {
+      raw,
+    });
 
-    const parsed = JSON.parse(cleaned) as ParsedExpense;
+    // ── Extract JSON safely ────────────────────────────────────────────────
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
 
-    if (!parsed.amount || parsed.amount <= 0) {
-      throw new Error("No valid amount in AI response");
+    if (!jsonMatch) {
+      throw new Error(`No JSON found in Gemini response: ${raw}`);
     }
+
+    const parsed = JSON.parse(jsonMatch[0]) as ParsedExpense;
+
+    log.debug("Gemini parsed JSON", parsed);
+
+    // ── Validate amount ────────────────────────────────────────────────────
+    if (!parsed.amount || parsed.amount <= 0) {
+      throw new Error(`Invalid amount from Gemini: ${JSON.stringify(parsed)}`);
+    }
+
+    // ── Validate category ──────────────────────────────────────────────────
     if (!EXPENSE_CATEGORIES.includes(parsed.category as ExpenseCategory)) {
+      log.warn("Invalid Gemini category, using Others", {
+        category: parsed.category,
+      });
+
       parsed.category = "Others";
     }
+
+    // ── Validate date ──────────────────────────────────────────────────────
     if (!parsed.date || isNaN(Date.parse(parsed.date))) {
+      log.warn("Invalid Gemini date, using today", {
+        date: parsed.date,
+      });
+
       parsed.date = new Date().toISOString();
     }
 
-    log.debug("Gemini parsed successfully", parsed);
+    log.debug("Gemini success", parsed);
+
     return parsed;
   } catch (err) {
-    log.error("Gemini failed", { err, text });
+    log.error("Gemini failed", {
+      text,
+      error:
+        err instanceof Error
+          ? {
+              message: err.message,
+              stack: err.stack,
+            }
+          : err,
+    });
 
-    // ── Final fallback: if we at least have an amount, save as Others ────────
+    // ── Final fallback ─────────────────────────────────────────────────────
     if (amount && amount > 0) {
-      log.debug("Using final fallback with amount found", { amount, text });
-      return {
+      const fallback = {
         amount,
-        category: "Others",
-        note: text.replace(amount.toString(), "").trim() || text,
+        category: keywordCategory ?? "Others",
+        note: extractNote(text, amount),
         date: parseRelativeDate(text).toISOString(),
       };
+
+      log.warn("Using fallback parser", fallback);
+
+      return fallback;
     }
 
     throw new Error(
-      'Could not understand the expense. Please try:\n"250 lunch"\n"80 rickshaw"\n"500 grocery"',
+      'Could not understand the expense.\nExamples:\n"250 lunch"\n"80 rickshaw"\n"500 grocery"',
     );
   }
 }
