@@ -426,39 +426,43 @@ export async function parseExpenseWithAI(text: string): Promise<ParsedExpense> {
 
   try {
     const prompt = `
-You are an expense parser for a Bangladeshi expense tracker app.
+You are an expert expense parser for a Bangladeshi expense tracker app.
 
 Parse the user's message and extract expense details.
 
 User message: "${text}"
-
 Today's date: ${new Date().toISOString().split("T")[0]}
 
 Available categories:
 ${EXPENSE_CATEGORIES.join(", ")}
 
 Category rules:
-- Food: anything edible, fruits, drinks, restaurants
-- Transport: rickshaw, cng, uber, bus, fuel
-- Shopping: clothes, stationery, household items
-- Bills: electricity, rent, internet, recharge
-- Health: medicine, doctor, hospital
-- Entertainment: movies, games, sports
+- Food: anything edible, fruits, drinks, restaurants, street food
+- Transport: rickshaw, cng, uber, pathao, bus, fuel, fare
+- Shopping: clothes, stationery, household items, grocery, bazar
+- Bills: electricity, rent, internet, mobile recharge, wifi
+- Health: medicine, doctor, hospital, pharmacy
+- Entertainment: movies, games, sports, outings
 - Others: only if nothing else fits
 
-Rules:
-- amount must be positive number
-- category must be one from available categories
-- note should be short
-- date should be YYYY-MM-DD
+Parsing & Numeric Rules:
+1. Handle 'k': If a number is followed by 'k' or 'K' (e.g., "2k", "1.5k"), multiply it by 1000 (e.g., 2000, 1500).
+2. Multiple Numbers: If multiple numbers appear (e.g., "3kg rice 270"), the largest number is usually the total cost. Smaller numbers are usually quantities/weights—ignore quantities and extract the total cost.
+3. Language: Handle "Banglish" terms (e.g., "vara" means fare/transport, "bazar" means shopping/grocery).
+
+Rules for output:
+- amount: must be a positive number (converted to a standard integer/float)
+- category: must be exactly one from the available categories list
+- note: a very short description (e.g., "mango", "rickshaw fare", "rent")
+- date: YYYY-MM-DD (interpret "yesterday", "2 days ago", or specific weekdays relative to Today's Date)
 
 Return ONLY valid JSON.
 
 Example:
 {
-  "amount": 250,
-  "category": "Food",
-  "note": "mango",
+  "amount": 2500,
+  "category": "Bills",
+  "note": "house rent",
   "date": "2026-05-12"
 }
 `;
